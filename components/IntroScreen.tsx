@@ -7,10 +7,10 @@
  * MEDIA ASSETS NOTE:
  * The animations and visuals in this component are procedurally generated using CSS3 and SVG.
  * There are no external image or video files.
- * To use these assets in other platforms, you would port the CSS @keyframes and HTML structure.
+ * To use these assets in other platforms, you would port the CSS @keyframes (found in index.css) and HTML structure.
  * Icons are from 'lucide-react': https://lucide.dev/
 */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Play, Hexagon, ShieldCheck, Zap } from 'lucide-react';
 
 interface IntroScreenProps {
@@ -19,15 +19,15 @@ interface IntroScreenProps {
 
 const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
   const [phase, setPhase] = useState(0); 
-  // 0: Orthogonal Chaos (Different perspectives floating)
+  // 0: Orthogonal Chaos (Eccentric wandering)
   // 1: Convergence (The Gathering)
-  // 2: Renormalization (Tension tightening)
+  // 2: Renormalization (Phase Locking - Centering the eccentricity)
   // 3: Purification (Expelling fallacy/noise)
   // 4: Truth State (Stable Mesh)
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 1500); // Begin convergence
-    const t2 = setTimeout(() => setPhase(2), 3500); // Tension/Snap
+    const t2 = setTimeout(() => setPhase(2), 3500); // Phase Lock (Remove eccentricity)
     const t3 = setTimeout(() => setPhase(3), 4500); // Purge Noise
     const t4 = setTimeout(() => setPhase(4), 5500); // UI Reveal
 
@@ -43,54 +43,18 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
     onComplete();
   };
 
-  // Generate "Fallacy/Noise" particles that will be ejected
-  const noiseParticles = Array.from({ length: 30 });
+  // Memoize particles to prevent random jitter on re-renders
+  const particles = useMemo(() => {
+    return Array.from({ length: 30 }).map(() => ({
+      x: (Math.random() - 0.5) * 800,
+      y: (Math.random() - 0.5) * 800,
+      z: (Math.random() - 0.5) * 800
+    }));
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-950 flex flex-col items-center justify-center overflow-hidden font-display perspective-1000">
-      <style>{`
-        .perspective-1000 { perspective: 1000px; }
-        .preserve-3d { transform-style: preserve-3d; }
-        
-        /* Gyroscopic Manifold Animations - Moving the planes themselves */
-        @keyframes plane-gyrate-1 {
-          0% { transform: rotate3d(1, 0.5, 0, 0deg); }
-          50% { transform: rotate3d(1, 0.5, 0, 180deg); }
-          100% { transform: rotate3d(1, 0.5, 0, 360deg); }
-        }
-        @keyframes plane-gyrate-2 {
-          0% { transform: rotate3d(0, 1, 0.5, 0deg); }
-          50% { transform: rotate3d(0, 1, 0.5, 180deg); }
-          100% { transform: rotate3d(0, 1, 0.5, 360deg); }
-        }
-        @keyframes plane-gyrate-3 {
-          0% { transform: rotate3d(0.5, 0, 1, 0deg); }
-          50% { transform: rotate3d(0.5, 0, 1, 180deg); }
-          100% { transform: rotate3d(0.5, 0, 1, 360deg); }
-        }
-
-        @keyframes mesh-tighten {
-          0% { transform: scale(1.2); opacity: 0.8; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-
-        @keyframes core-ignition {
-          0% { transform: translate(-50%, -50%) scale(0); opacity: 0; box-shadow: 0 0 0 rgba(255,255,255,0); }
-          50% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; box-shadow: 0 0 50px rgba(6,182,212,0.5); }
-          100% { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 0 100px rgba(255,255,255,0.8), 0 0 200px rgba(6,182,212,0.4); }
-        }
-
-        @keyframes eject-fallacy {
-          0% { transform: translate3d(0,0,0) scale(1); opacity: 0.8; }
-          100% { transform: translate3d(var(--tx), var(--ty), var(--tz)) scale(0); opacity: 0; }
-        }
-
-        @keyframes text-reveal {
-          0% { opacity: 0; transform: translateY(20px); letter-spacing: 1em; }
-          100% { opacity: 1; transform: translateY(0); letter-spacing: 0.2em; }
-        }
-      `}</style>
-
+      
       {/* Deep Space Background */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black"></div>
       
@@ -105,54 +69,59 @@ const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
              }}>
         </div>
 
-        {/* Plane 1: Cyan (Empirical) - Dynamic Gyroscope */}
-        <div className={`absolute inset-0 m-auto w-80 h-80 border border-cyan-400/50 rounded-full bg-gradient-to-t from-cyan-500/20 to-cyan-500/0 shadow-[0_0_40px_rgba(34,211,238,0.2)] preserve-3d transition-all duration-1000 ease-in-out mix-blend-screen`}
+        {/* 
+            DYNAMIC ECCENTRICITY LOGIC:
+            - Phases 0-1: transform-origin is OFF-CENTER (e.g., 40% 60%). 
+              This causes the planes to "wobble" and the intersection point to wander.
+            - Phase 2+: transform-origin snaps to 50% 50%.
+              This represents "Phase Locking" or "Renormalization".
+        */}
+
+        {/* Plane 1: Cyan (Empirical) */}
+        <div className={`absolute inset-0 m-auto w-80 h-80 border border-cyan-400/50 rounded-full bg-gradient-to-t from-cyan-500/20 to-cyan-500/0 shadow-[0_0_40px_rgba(34,211,238,0.2)] preserve-3d transition-all duration-[2000ms] ease-in-out mix-blend-screen`}
              style={{ 
                animation: 'plane-gyrate-1 12s linear infinite',
                opacity: phase >= 1 ? 1 : 0,
-               transform: phase < 1 ? 'scale(2) rotateX(90deg)' : undefined
+               transformOrigin: phase < 2 ? '42% 58%' : '50% 50%', // Eccentric -> Centered
+               transform: phase < 1 ? 'scale(1.8) rotateX(90deg)' : undefined
              }}>
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(34,211,238,0.1)_60%)] rounded-full"></div>
         </div>
 
-        {/* Plane 2: Magenta (Rational) - Dynamic Gyroscope */}
-        <div className={`absolute inset-0 m-auto w-80 h-80 border border-purple-400/50 rounded-full bg-gradient-to-tr from-purple-500/20 to-purple-500/0 shadow-[0_0_40px_rgba(168,85,247,0.2)] preserve-3d transition-all duration-1000 ease-in-out mix-blend-screen`}
+        {/* Plane 2: Magenta (Rational) */}
+        <div className={`absolute inset-0 m-auto w-80 h-80 border border-purple-400/50 rounded-full bg-gradient-to-tr from-purple-500/20 to-purple-500/0 shadow-[0_0_40px_rgba(168,85,247,0.2)] preserve-3d transition-all duration-[2000ms] ease-in-out mix-blend-screen`}
              style={{ 
                animation: 'plane-gyrate-2 15s linear infinite',
                opacity: phase >= 1 ? 1 : 0,
-               transform: phase < 1 ? 'scale(2) rotateY(90deg)' : undefined
+               transformOrigin: phase < 2 ? '58% 45%' : '50% 50%', // Eccentric -> Centered
+               transform: phase < 1 ? 'scale(1.8) rotateY(90deg)' : undefined
              }}>
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(168,85,247,0.1)_60%)] rounded-full"></div>
         </div>
 
-        {/* Plane 3: Amber (Intuitive) - Dynamic Gyroscope */}
-        <div className={`absolute inset-0 m-auto w-80 h-80 border border-amber-400/50 rounded-full bg-gradient-to-bl from-amber-500/20 to-amber-500/0 shadow-[0_0_40px_rgba(251,191,36,0.2)] preserve-3d transition-all duration-1000 ease-in-out mix-blend-screen`}
+        {/* Plane 3: Amber (Intuitive) */}
+        <div className={`absolute inset-0 m-auto w-80 h-80 border border-amber-400/50 rounded-full bg-gradient-to-bl from-amber-500/20 to-amber-500/0 shadow-[0_0_40px_rgba(251,191,36,0.2)] preserve-3d transition-all duration-[2000ms] ease-in-out mix-blend-screen`}
              style={{ 
                animation: 'plane-gyrate-3 18s linear infinite',
                opacity: phase >= 1 ? 1 : 0,
-               transform: phase < 1 ? 'scale(2) rotateZ(90deg)' : undefined
+               transformOrigin: phase < 2 ? '50% 65%' : '50% 50%', // Eccentric -> Centered
+               transform: phase < 1 ? 'scale(1.8) rotateZ(90deg)' : undefined
              }}>
              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_40%,rgba(251,191,36,0.1)_60%)] rounded-full"></div>
         </div>
         
         {/* Phase 3: Expelling Fallacy (Noise Particles) */}
-        {phase === 3 && noiseParticles.map((_, i) => {
-           // Random ejection vectors
-           const x = (Math.random() - 0.5) * 800;
-           const y = (Math.random() - 0.5) * 800;
-           const z = (Math.random() - 0.5) * 800;
-           return (
+        {phase === 3 && particles.map((p, i) => (
              <div key={i} 
                   className="absolute top-1/2 left-1/2 w-1 h-1 bg-slate-500 rounded-full"
                   style={{
-                    '--tx': `${x}px`,
-                    '--ty': `${y}px`,
-                    '--tz': `${z}px`,
+                    '--tx': `${p.x}px`,
+                    '--ty': `${p.y}px`,
+                    '--tz': `${p.z}px`,
                     animation: `eject-fallacy 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards`
-                  } as any}>
+                  } as React.CSSProperties}>
              </div>
-           );
-        })}
+        ))}
 
       </div>
 

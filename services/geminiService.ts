@@ -60,14 +60,19 @@ export const researchTopicForPrompt = async (
   
   const promptLabel = format === 'video' ? 'VIDEO_PROMPT' : 'IMAGE_PROMPT';
 
+  // Conditional instruction to ensure file priority
+  const searchInstruction = file 
+      ? "**PRIMARY DIRECTIVE: A source file has been provided. You MUST analyze the content of this file (image, document, or text) deeply and use it as the foundation for your research facts and visual prompt. Use Google Search ONLY to verify details or define terms found in the file. Do not ignore the file.**"
+      : "**IMPORTANT: Use the Google Search tool to find the most accurate, up-to-date information about this topic to augment what is provided or fill in gaps.**";
+
   const systemPrompt = `
     You are an expert visual researcher and data analyst.
     
     Your goal is to research the topic: "${topic}" and create a plan for ${format === 'video' ? 'an explainer video' : 'an infographic'}.
     
-    ${file ? `A supplementary file (${file.name}) has been provided. Analyze this file deeply. Extract key data points, schemas, code snippets, or structural information from it to ensure the visualization accurately reflects this source material.` : ''}
+    ${file ? `[ATTACHED FILE: ${file.name}]` : ''}
 
-    **IMPORTANT: Use the Google Search tool to find the most accurate, up-to-date information about this topic to augment what is provided or fill in gaps.**
+    ${searchInstruction}
     
     Context:
     ${levelInstr}
@@ -77,7 +82,7 @@ export const researchTopicForPrompt = async (
     Please provide your response in the following format EXACTLY:
     
     FACTS:
-    - [Fact 1 (Verified from search or extracted from file)]
+    - [Fact 1 (Extracted from file or verified search)]
     - [Fact 2]
     - [Fact 3]
     
@@ -87,7 +92,8 @@ export const researchTopicForPrompt = async (
       : 'A highly detailed image generation prompt describing the visual composition, colors, and layout for the infographic. Do not include citations in the prompt. If a file was provided, describe specifically how its contents should be visually represented.'}]
   `;
 
-  const parts: any[] = [{ text: systemPrompt }];
+  // Place the file FIRST in the parts array so the model sees it as the primary context
+  const parts: any[] = [];
   
   if (file) {
     parts.push({
@@ -97,6 +103,8 @@ export const researchTopicForPrompt = async (
       }
     });
   }
+
+  parts.push({ text: systemPrompt });
 
   const response = await getAi().models.generateContent({
     model: TEXT_MODEL,
